@@ -1,0 +1,85 @@
+/include/ "zynq.dtsi"
+
+/ {
+        model = "fmc130e";
+        aliases {
+                serial0 = &uart0;
+                ethernet0 = &gem0;
+        };
+        chosen {
+                bootargs = "console=ttyPS0,115200 earlyprintk root=/dev/nfs nfsroot=192.168.0.158:/tftpboot/nfsroot-fmc130e-ad9371, tcp ip=dhcp rw";
+                stdout-path = "serial0:115200ns";
+        };
+        memory {
+                device_type = "memory";
+                reg = <0x0 0x40000000>;
+        };
+
+        leds {
+                compatible = "gpio-leds";
+
+                H12 {
+                        label = "H12";
+                        gpios = <&gpio0 46 0>;
+                        linux,default-trigger = "heartbeat";
+                };
+
+                D35_PIN31 {
+                    gpios = <&gpio0 49 0>;
+                    default-state = "off";
+                };
+        };
+
+        zdev_instance: zdev@40000000 {
+            status = "disabled";
+            compatible = "insys,lzynq";
+            #address-cells = <1>;
+            #size-cells = <1>;
+            reg = <0x40000000 0x80000 0x40080000 0x80000>;
+            interrupt-parent = <&intc>;
+            interrupts = <1 45 4>; // Actually - 61. 61-16 = 45
+        };
+
+        usb_phy0: phy0@e0002000 {
+                compatible = "ulpi-phy";
+                #phy-cells = <0>;
+                reg = <0xe0002000 0x1000>;
+                view-port = <0x0170>;
+                drv-vbus;
+        };
+
+        fpga_axi: fpga-axi@0 {
+                compatible = "simple-bus";
+                #address-cells = <0x1>;
+                #size-cells = <0x1>;
+                ranges;
+        };
+
+};
+
+&gem0 {
+    phy-handle = <&phy0>;
+    ps7_ethernet_0_mdio: mdio {
+        phy0: phy@1 {
+            compatible = "ethernet-phy-id0282.F014";
+            device_type = "ethernet-phy";
+            reg = <1>;
+        };
+    };
+};
+
+&usb0 {
+    status = "okay";
+    usb-phy = <&usb_phy0>;
+    phy_type = "ulpi";
+    dr_mode = "host";
+};
+
+&uart0 {
+    status = "okay";
+};
+
+&uart1 {
+    status = "okay";
+};
+
